@@ -1,7 +1,34 @@
+# Configuración de Gitpod
+
+# Imagen de Contenedor
 image:
   file: .gitpod.Dockerfile
 
+# Tareas
 tasks:
+
+  - name: "Inicia el workspace en la carpeta seleccionada"
+    before: |
+      (
+        input="$GITPOD_WORKSPACE_CONTEXT_URL";
+        echo "Cargando workspace en $input"
+        if [[ "$input" =~ /(tree|blob)/(.*) ]]; then {
+            slug="${BASH_REMATCH[2]}";
+            _branch="${slug%%/*}";
+            path="${slug#*/}";
+            if test -e "$path"; then {
+                if test ! -d "$path"; then {
+                    path="${path%/*}" # Remove filename
+                } fi
+                # https://github.com/<owner>/<repo>/(tree|blob)/<branch> %/file.ext% 
+                # != https://github.com/<owner>/<repo>/(tree|blob)/<branch>
+                if test "${input%/path}" != "${input%/*}"; then {
+                    until code -r "$path"; do sleep 1; done
+                } fi
+            } fi
+        } fi
+      ) & disown && exit;
+
   - name: Restore & Build
     init: |
       dotnet dev-certs https 
